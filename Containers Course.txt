@@ -809,16 +809,120 @@ sudo docker network prune
 Interview Questions
 ===========================================
 1) What is Docker?
+
+Docker is a containeraization platform tool that lets you package your application and its dependencies into a single unit called a container. This ensures it runs the same everywhere—on your laptop, server, or cloud.
+
+Example: You build a Node.js app. Instead of installing Node.js on every machine, you create a Docker image with Node.js and your app. Now it runs anywhere with Docker installed.
+
 2) What is Container?
+
+A container is a lightweight, isolated environment that runs your app. It includes everything your app needs—code, libraries, and settings.
+
+Example: Think of a container like a lunchbox. It holds your meal (app) and all the ingredients (dependencies) so you can eat (run) it anywhere.
+
 3) How containers are different from the Virtual Machines?
+
+Feature      Container	           Virtual Machine
+OS	     Shares host OS	   Has its own OS
+Size	     Lightweight (MBs)	   Heavy (GBs)
+Boot Time    Seconds	           Minutes
+Isolation    Process-level	   Full OS-level
+
+Example: Containers are like apps on your phone. VMs are like running a whole phone inside your phone.
+
 4) What is Docker life cycle?
+
+Docker containers go through five main stages:
+
+Stage	 Description	                                                       Command Example
+Created	 Container is created from an image but not running yet	               docker create --name myapp nginx
+Running	 Container is actively executing its process	                       docker run -d --name myapp nginx
+Paused	 Container is temporarily suspended (processes halted)	               docker pause myapp
+Stopped	 Container is shut down but still exists	                       docker stop myapp
+Deleted	 Container is removed from the system	                               docker rm myapp
+
+
 5) What are the different Docker components?
+
+Docker Engine: Core service that runs containers.
+
+Docker CLI: Command-line tool (docker run, docker build, etc.).
+
+Docker Image: Blueprint for containers.
+
+Docker Container: Running instance of an image.
+
+Dockerfile: Script to build images.
+
+Docker Hub: Public registry to share images.
+
+Docker Compose: Tool to run multi-container apps.
+
 6) What is the difference between docker COPY and docker ADD?
+
+Command	 Purpose	                                                Extra Features
+COPY	 Copies files from host to image	                        Simple, preferred
+ADD	 Same as COPY + extracts .tar files + supports URLs	        More powerful but less predictable
+
+Dockerfile
+COPY app.py /app/
+ADD archive.tar.gz /app/  # Automatically extracts it
+
 7) What is the difference between CMD and Entrypoint in Docker?
+
+
+Feature 	CMD	                  ENTRYPOINT
+Purpose	        Default command	          Fixed command to run
+Overridable	Yes, via CLI	          No, unless using --entrypoint
+
+Example:
+
+dockerfile
+ENTRYPOINT ["python3"]
+CMD ["app.py"]
+
+Running docker run image executes: python3 app.py
+
 8) What are the networking types in Docker and what is the default?
+
+
+Type	                Description
+Bridge (default)	Containers share a virtual network
+Host	                Container uses host’s network directly
+None	                No networking
+Overlay	                Used in Docker Swarm across hosts
+Macvlan	                Assigns MAC address to container
+
+Default: Bridge
+
 9) Can you explain how to isolate networking between the containers?
+
+Use custom bridge networks: Containers on different networks can't talk.
+
+docker network create isolated_net
+docker run --network=isolated_net nginx
+
 10) What is Multistage Docker Build?
+
+Multistage builds let you use multiple FROM statements to separate build and runtime environments—reducing image size.
+
+🧠 Example:
+
+dockerfile
+FROM node:18 AS builder
+WORKDIR /app
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+
 11) What are the Distroless images in Docker?
+
+Distroless images contain only your app and its runtime dependencies — no package manager, shell, or OS utilities. They’re smaller in size and more secure.
+
+Example: Instead of using node:18, you use a distroless image like gcr.io/distroless/nodejs.
+
 12) Real Time Challenges with Docker?
 
 -> Docker is a single daemon process. Which can cause a single point of failure, If the Docker daemon goes down for some reason all the applications are down.
