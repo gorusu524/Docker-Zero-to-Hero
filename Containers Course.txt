@@ -1,0 +1,837 @@
+-> Virtual machines have the complete OS.
+-> Containers are an advancement to Virtual Machines.
+-> Virtual Machines have solved some problems with Physical Servers.
+-> Containers have solved some problems with Virtual Machines.
+
+What is Container
+----------------------
+-> A container is a light-weight, stand-alone, and executable software package that wraps an application with all its dependencies, such as
+libraries, configuration files, and binaries, in order to run the Application. Containers make sure that no matter where an application is 
+deployed, whether it is in a developer's laptop, the testing environment, or the production server, it behaves the same way.
+
+-> Containers do this by isolating an application from the underlying system, and therefore they are not dependent on any setting or 
+software installed in the operating system of the host. Instead everything an application requires to run is packed within the container 
+itself. This isolation allows containers to be more efficient compared to traditional virtual machines (VMs), which contain a full 
+operating system besides the application.
+
+-> Containers do not have complete OS(minimal OS or base image).
+-> Containers use the resources from the base operating system.
+
+
+What is Docker?
+---------------------
+-> Docker is an open-source containerization platform by which you can pack your application and all its dependencies into a standardized 
+unit called a container.
+
+Docker is a containerization platform that provides easy way to containerize your applications, which means, using Docker you can build container images, run the images to create containers and also push these containers to container regestries such as DockerHub, Quay.io and so on.
+
+In simple words, you can understand as containerization is a concept or technology and Docker Implements Containerization.
+
+Key Components of Docker
+----------------------------
+The following are the some of the key components of Docker:
+
+Docker Engine: Docker Engine is a core part of docker, that handles the creation and management of containers.
+Docker Image: Docker Image is a read-only template that is used for creating containers, containing the application code and dependencies.
+Docker Hub: It is a cloud based repository that is used for finding and sharing the container images.
+Dockerfile: It is a file that describes the steps to create an image quickly.
+Docker Registry : It is a storage distribution system for docker images, where you can store the images in both public and private modes.
+
+
+Files and Folders in containers base images
+
+    /bin: contains binary executable files, such as the ls, cp, and ps commands.
+
+    /sbin: contains system binary executable files, such as the init and shutdown commands.
+
+    /etc: contains configuration files for various system services.
+
+    /lib: contains library files that are used by the binary executables.
+
+    /usr: contains user-related files and utilities, such as applications, libraries, and documentation.
+
+    /var: contains variable data, such as log files, spool files, and temporary files.
+
+    /root: is the home directory of the root user.
+
+
+Files and Folders that containers use from host operating system
+    The host's file system: Docker containers can access the host file system using bind mounts, which allow the container to read and write files in the host file system.
+
+    Networking stack: The host's networking stack is used to provide network connectivity to the container. Docker containers can be connected to the host's network directly or through a virtual network.
+
+    System calls: The host's kernel handles system calls from the container, which is how the container accesses the host's resources, such as CPU, memory, and I/O.
+
+    Namespaces: Docker containers use Linux namespaces to create isolated environments for the container's processes. Namespaces provide isolation for resources such as the file system, process ID, and network.
+
+    Control groups (cgroups): Docker containers use cgroups to limit and control the amount of resources, such as CPU, memory, and I/O, that a container can access.
+    
+
+
+
+Install the docker
+-----------------------------
+-> sudo apt update -y
+
+-> sudo apt install docker.io -y
+
+-> docker run hello-world
+
+If the output says:
+
+docker: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/create": dial 
+unix /var/run/docker.sock: connect: permission denied.
+See 'docker run --help'.
+
+This can mean,
+
+Your user does not have access to run docker commands.
+
+Grant Access to your user to run docker commands
+-> sudo usermod -aG docker ubuntu 
+
+
+git clone https://github.com/iam-veeramalla/Docker-Zero-to-Hero.git
+
+docker build -t gorusu524/my-first-docker-image:latest .
+
+docker images
+
+docker login -u gorusu524 -p Ganendra@524
+
+docker run -it gorusu524/my-first-docker-image
+
+docker push gorusu524/my-first-docker-image
+
+docker run -p 8000:8000 -it 5996f78bb9d
+
+
+Multistage Dockerfile
+----------------------------
+Traditionally, Docker images used to contain all the dependencies, libraries, and tools required to run an application, leading to bloated images that consume unnecessary disk space and hence increase the deployment times
+
+Multistage Dockerfile: It’s a way to build Docker images in multiple stages within a single file, so you can include everything you need to compile or prepare your app—but only keep 
+what’s truly needed in the final image. This helps reduce size, speed up deployment, and improve efficiency.
+
+Use Multi-Stage Builds
+# Code template to get you started For Multistage Dockerfile
+# Build stage with development tools
+FROM maven:3.5-jdk-8 as build
+WORKDIR /app
+COPY . .
+RUN mvn clean package
+
+#FInal Stage
+FROM tomcat:8.0.20-jre8
+COPY --from=build /app/target/maven-web-app*.war /usr/local/tomcat/webapps/maven-web-application.war
+
+
+Explanation Of The Code
+------------------------
+Build Stage (build):
+FROM maven:3.5-jdk-8 as build: This line designates the official Maven image with JDK 8 installed as the basis image for the build stage.
+WORKDIR /app: Sets the Docker container's working directory to /app.
+COPY . .: Moves each file from the current directory (which includes the Dockerfile) to the /app directory of the container.
+RUN mvn clean package: Performs out the project's cleanup and WAR file packaging using the Maven command. The Maven project is assumed to be in the root directory with this command.
+
+Final Stage:
+FROM tomcat:8.0.20-jre8: Use the official Tomcat image with JRE 8 installed as the basis image for the final step.
+COPY --from=build /app/target/maven-web-app*.war /usr/local/tomcat/webapps/maven-web-application.war: Copies the generated WAR file from the build step into the final image's Tomcat webapps directory (/usr/local/tomcat/webapps/). The file is being copied from the previous build stage, according to by the --from=build flag. To take into account version numbers or other variations in the WAR file name, use the wildcard pattern maven-web-app*.war.
+
+
+Necessary Commands Required For Multi-Stage Dockerfile
+------------------------------------------------------------
+1) FROM image:tag
+
+Defines the base image for the current stage.
+
+2) AS name
+
+Assigns a name to the current stage.
+
+3) WORKDIR path
+
+Sets the working directory for subsequent commands.
+
+4) COPY source destination
+
+Copies files/directories from context/previous stage.
+
+5) RUN command
+
+Executes shell commands.
+
+6) CMD ["command", "arg1", ...]
+
+Sets the default command for container start.
+
+7) USER user
+
+Sets the user account for container processes.
+
+8) EXPOSE port
+
+Specifies ports container listens on.
+
+9) ENV KEY=VALUE
+
+Defines environment variables accessible in container.
+
+10) LABEL key=value
+
+Adds metadata labels to the image.
+
+11) --from=stage
+
+Specifies source stage for copying files.
+
+
+Benefits Of Multistage Dockerfile
+------------------------------------
+Reduced Image Size: 
+Enhanced Security:
+Improved Build Efficiency: 
+Simplified Maintenance:
+Better CI/CD Integration: 
+
+
+Distroless Images (https://github.com/GoogleContainerTools/distroless)
+------------------------------------------------------------------------
+Minimal or distroless images
+
+
+Minimal images, sometimes called distroless images, are container images stripped of unnecessary components such as package managers, shells, or even the underlying operating system distribution. Docker Hardened Images (DHI) embrace this minimal approach to reduce vulnerabilities and enforce secure software delivery.
+
+"Distroless" images contain only your application and its runtime dependencies. They do not contain package managers, shells or any other programs you would expect to find in a standard Linux distribution.
+
+What are minimal or distroless images?
+----------------------------------------
+Traditional container images include a full OS, often more than what is needed to run an application. In contrast, minimal or distroless images include only:
+
+The application binary
+Its runtime dependencies (e.g., libc, Java, Python)
+Any explicitly required configuration or metadata
+
+They typically exclude:
+
+OS tools (e.g., ls, ps, cat)
+Shells (e.g., sh, bash)
+Package managers (e.g., apt, apk)
+Debugging utilities (e.g., curl, wget, strace)
+
+
+
+Docker Bind Mounts and Volumes
+-------------------------------------------
+Docker containers enable apps to execute in an isolated environment. All modifications made inside the container are lost by default when it ends. Docker volumes and bind mounts can be useful for storing data in between runs. One way to store data outside of containers is with volumes. All volumes are kept in a specific directory on your host, typically /var/lib/docker/volumes for Linux systems, and are controlled by Docker.
+
+Docker Volumes are a popular and effective method for assuring data permanence while working in containers. Docker volumes are file systems that are mounted on Docker containers to preserve the data generated by the container.
+
+Volumes: Docker manages volumes kept in a section of the host filesystem (/var/lib/docker/volumes on Linux). This portion of the filesystem shouldn't be altered by non-Docker processes. In Docker, volumes are the most effective way to store data. Using the docker volume create command, we may directly create a volume, or Docker can do it for us when it creates a container or service.
+
+Bind Mounts: On the host system, bind mounts can be kept anywhere. These might be crucial system folders or files. They are always modifiable by non-Docker processes running on a Docker host or in a Docker container. Comparatively speaking, bind mounts are less useful than volumes.
+
+root@ip-172-31-30-187:~# docker volume create ganendra
+ganendra
+(or)
+root@ip-172-31-30-187:~# docker volume create -d local ganendra
+ganendra
+
+root@ip-172-31-30-187:~# docker volume ls
+DRIVER    VOLUME NAME
+local     ganendra
+
+Inspecting Volumes
+-----------------------
+To inspect volumes in Docker, you can use the docker volume inspect command followed by the name or ID of the volume you want to inspect. For example:
+
+root@ip-172-31-30-187:~# docker volume inspect ganendra
+[
+    {
+        "CreatedAt": "2025-07-11T05:50:35Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/ganendra/_data",
+        "Name": "ganendra",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+root@ip-172-31-30-187:~# 
+
+Removing Volumes
+----------------------
+To remove volumes in Docker, you can use the docker volume rm command followed by the name or ID of the volume you want to remove. For example:
+
+root@ip-172-31-30-187:~# docker volume rm ganendra
+ganendra
+
+root@ip-172-31-30-187:~# docker volume ls
+DRIVER    VOLUME NAME
+
+Pruning Volumes
+-------------------
+To prune volumes in Docker, you can use the docker volume prune command. This command removes all volumes not used by at least one container. Here's how you can use it:
+
+
+root@ip-172-31-30-187:~# docker volume create ganendra
+ganendra
+
+Starting a Container with a Volume
+--------------------------------------
+1) On Using -v Option
+
+we may start a container with a bind mount using the -v option:
+
+root@ip-172-31-30-187:/var/lib/docker/volumes# docker run -v ganendra:/apps samplesample:latest
+ 
+root@ip-172-31-30-187:/var/lib/docker/volumes# docker ps -a
+CONTAINER ID   IMAGE                             COMMAND                  CREATED         STATUS                     PORTS     NAMES
+ab3189d82559   samplesample:latest               "/bin/bash"              8 seconds ago   Exited (0) 6 seconds ago             eager_sinoussi
+0ea6322d9cdd   85996f78bb9d                      "/bin/bash -c 'sourc…"   6 days ago      Exited (0) 6 days ago                gifted_greider
+09c7c1354ca6   85996f78bb9d                      "/bin/bash -c 'sourc…"   6 days ago      Exited (0) 6 days ago                magical_faraday
+7d3f0eff302a   gorusu524/my-first-docker-image   "python3 app.py"         6 days ago      Exited (0) 6 days ago                magical_cray
+30d42e6cbfa0   hello-world                       "/hello"                 6 days ago      Exited (0) 6 days ago                nostalgic_neumann
+root@ip-172-31-30-187:/var/lib/docker/volumes# 
+
+2) Using The –mount Option
+
+To indicate the volume we want to mount, we might find it easier to use the more obvious --mount option:
+
+root@ip-172-31-30-187:~# docker run -d --mount source=ganendra,target=/app samplesample:latest
+6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051
+root@ip-172-31-30-187:~# 
+
+root@ip-172-31-30-187:~# docker ps -a
+CONTAINER ID   IMAGE                             COMMAND                  CREATED          STATUS                      PORTS     NAMES
+6db8292c5bdf   samplesample:latest               "/bin/bash"              46 seconds ago   Exited (0) 45 seconds ago             beautiful_lehmann
+0ea6322d9cdd   85996f78bb9d                      "/bin/bash -c 'sourc…"   6 days ago       Exited (0) 6 days ago                 gifted_greider
+09c7c1354ca6   85996f78bb9d                      "/bin/bash -c 'sourc…"   6 days ago       Exited (0) 6 days ago                 magical_faraday
+7d3f0eff302a   gorusu524/my-first-docker-image   "python3 app.py"         6 days ago       Exited (0) 6 days ago                 magical_cray
+30d42e6cbfa0   hello-world                       "/hello"                 6 days ago       Exited (0) 6 days ago                 nostalgic_neumann
+root@ip-172-31-30-187:~# docker inspect 6db8292c5bdf
+[
+    {
+        "Id": "6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051",
+        "Created": "2025-07-11T06:02:10.237816957Z",
+        "Path": "/bin/bash",
+        "Args": [],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2025-07-11T06:02:10.575435397Z",
+            "FinishedAt": "2025-07-11T06:02:11.3629377Z"
+        },
+        "Image": "sha256:f9248aac10f2f82e0970222e36cc7b71215b88e974e001282e5cd89797a82218",
+        "ResolvConfPath": "/var/lib/docker/containers/6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051/hostname",
+        "HostsPath": "/var/lib/docker/containers/6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051/hosts",
+        "LogPath": "/var/lib/docker/containers/6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051/6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051-json.log",
+        "Name": "/beautiful_lehmann",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "bridge",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                27,
+                167
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": [],
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "Mounts": [
+                {
+                    "Type": "volume",
+                    "Source": "ganendra",
+                    "Target": "/app"
+                }
+            ],
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/c4738402462cda6b40da73c57a92646947c2cb4e7f74419fa7598eb0c2318ed6-init/diff:/var/lib/docker/overlay2/1c0a9adc0c08fd40451ce52a68d5b015fea32d19efbb283030c647ef0f52da99/diff",
+                "MergedDir": "/var/lib/docker/overlay2/c4738402462cda6b40da73c57a92646947c2cb4e7f74419fa7598eb0c2318ed6/merged",
+                "UpperDir": "/var/lib/docker/overlay2/c4738402462cda6b40da73c57a92646947c2cb4e7f74419fa7598eb0c2318ed6/diff",
+                "WorkDir": "/var/lib/docker/overlay2/c4738402462cda6b40da73c57a92646947c2cb4e7f74419fa7598eb0c2318ed6/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "ganendra",
+                "Source": "/var/lib/docker/volumes/ganendra/_data",
+                "Destination": "/app",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            }
+        ],
+        "Config": {
+            "Hostname": "6db8292c5bdf",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "/bin/bash"
+            ],
+            "Image": "samplesample:latest",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {
+                "org.opencontainers.image.ref.name": "ubuntu",
+                "org.opencontainers.image.version": "24.04"
+            }
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "MacAddress": "",
+                    "DriverOpts": null,
+                    "NetworkID": "8b6c68696929e49e2c862f42fb10f9df32c2536abc8510074337ead70bfa7daf",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        }
+    }
+]
+
+root@ip-172-31-30-187:~# docker volume ls
+DRIVER    VOLUME NAME
+local     ganendra
+root@ip-172-31-30-187:~# docker volume rm ganendra
+Error response from daemon: remove ganendra: volume is in use - [6db8292c5bdfe1424d5fdcaba8cb9b7c9332f06b258cfeac2fb74d1b5b086051]
+root@ip-172-31-30-187:~# 
+
+root@ip-172-31-30-187:/var/lib/docker/volumes# docker ps -a --filter volume=ganendra
+CONTAINER ID   IMAGE                 COMMAND       CREATED          STATUS                      PORTS     NAMES
+6db8292c5bdf   samplesample:latest   "/bin/bash"   13 minutes ago   Exited (0) 13 minutes ago             beautiful_lehmann
+root@ip-172-31-30-187:/var/lib/docker/volumes# 
+
+Stop and Remove the Container
+-----------------------------
+If you're sure the container can be removed:
+
+docker stop <container_id>
+docker rm <container_id>
+
+Now Remove the Volume
+---------------------
+
+docker volume rm ganendra
+
+Tracking And Controlling Volume Consumption
+--------------------------------------------
+root@ip-172-31-30-187:/var/lib/docker/volumes# docker system df -v
+Images space usage:
+
+REPOSITORY                        TAG       IMAGE ID       CREATED        SIZE      SHARED SIZE   UNIQUE SIZE   CONTAINERS
+simplecalculatormultistage        latest    7f1cbc1507fa   5 days ago     1.96MB    1.962MB       0B            0
+<none>                            <none>    77ce612732a8   5 days ago     642MB     611.8MB       30.21MB       0
+simplecalculator                  latest    df3a54f08c86   5 days ago     642MB     642MB         0B            0
+<none>                            <none>    85996f78bb9d   6 days ago     595MB     595.2MB       0B            2
+gorusu524/my-first-docker-image   latest    6e00b6fb2383   6 days ago     548MB     548.1MB       0B            1
+sample                            latest    f9248aac10f2   3 weeks ago    78.1MB    78.12MB       0B            0
+hello-world                       latest    74cc54e27dc4   5 months ago   10.1kB    0B            10.07kB       1
+
+Containers space usage:
+
+CONTAINER ID   IMAGE                             COMMAND                  LOCAL VOLUMES   SIZE      CREATED      STATUS                  NAMES
+0ea6322d9cdd   85996f78bb9d                      "/bin/bash -c 'sourc…"   0               5.18kB    6 days ago   Exited (0) 6 days ago   gifted_greider
+09c7c1354ca6   85996f78bb9d                      "/bin/bash -c 'sourc…"   0               5.18kB    6 days ago   Exited (0) 6 days ago   magical_faraday
+7d3f0eff302a   gorusu524/my-first-docker-image   "python3 app.py"         0               0B        6 days ago   Exited (0) 6 days ago   magical_cray
+30d42e6cbfa0   hello-world                       "/hello"                 0               0B        6 days ago   Exited (0) 6 days ago   nostalgic_neumann
+
+Local Volumes space usage:
+
+VOLUME NAME     LINKS     SIZE
+ganendra_name   0         0B
+ganendra        0         0B
+
+Build cache usage: 0B
+
+CACHE ID   CACHE TYPE   SIZE      CREATED   LAST USED   USAGE     SHARED
+
+
+Reusing Volumes When Containers Start
+-------------------------------------------
+Instead of manually specifying each volume with the -v flag, you can use --volumes-from to inherit volumes from an existing container when starting a new container:
+
+# Create the first container
+$ docker run -d --name test -v my_vol:/data image:latest
+
+# Create the second container
+$ docker run -d --name backup --volumes-from test image:latest
+
+This command automatically mounts all volumes from the "test" container into the "backup" container, simplifying the setup process. It's handy for tasks like backing up data from one container to another.
+
+
+How to use Docker Volumes?
+-----------------------------------
+The following command launches a fresh Ubuntu 22.04 container and connects your terminal to it (-it), enabling you to execute example commands in the ensuing stages. Within the container, a volume named demo_volume is mounted to /data. Use the following command right now:
+
+docker run -it -v demo_volume:/data ubuntu:22.06
+
+
+
+
+Docker Networking
+------------------------
+A network is a group of two or more devices that can communicate with each other either physically or virtually. The Docker network is a virtual network created by Docker to enable communication between Docker containers. If two containers are running on the same host they can communicate with each other without the need for ports to be exposed to the host machine. You may use Docker to manage your Docker hosts in any platform manner, regardless of whether they run Windows, Linux, or a combination of the two.
+
+1) Container A can talk to Container B
+2) Container A have Isolation to Container B
+
+Network Drivers
+----------------
+There are several default network drivers available in Docker and some can be installed with the help of plugins, Command to see the list of containers in Docker mentioned below.
+
+docker network ls 
+
+root@ip-172-31-30-187:~# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+8b6c68696929   bridge    bridge    local
+dfe3ba0bfedf   host      host      local
+8cb8583ad705   none      null      local
+
+Types of Network Drivers
+-----------------------------
+bridge: If you build a container without specifying the kind of driver, the container will only be created in the bridge network, which is the default network. 
+host: Containers will not have any IP address they will be directly created in the system network which will remove isolation between the docker host and containers. 
+none: IP addresses won't be assigned to containers. These containments are not accessible to us from the outside or from any other container.
+overlay: overlay network will enable the connection between multiple Docker demons and make different Docker swarm services communicate with each other.
+ipvlan: Users have complete control over both IPv4 and IPv6 addressing by using the IPvlan driver.
+macvlan: macvlan driver makes it possible to assign MAC addresses to a container. 
+
+Create 2 containers
+-----------------------------
+root@ip-172-31-30-187:~# docker run -d --name container-a nginx:latest
+root@ip-172-31-30-187:~# docker run -d --name container-b nginx:latest
+
+root@ip-172-31-30-187:~# docker ps -a
+CONTAINER ID   IMAGE                             COMMAND                  CREATED          STATUS                  PORTS     NAMES
+87305ee2d1ea   nginx:latest                      "/docker-entrypoint.…"   13 seconds ago   Up 12 seconds           80/tcp    container-b
+a1527a2284fe   nginx:latest                      "/docker-entrypoint.…"   5 minutes ago    Up 5 minutes            80/tcp    container-a
+
+Get the IP Address of container-a and container-b
+-----------------------------------------------------
+docker inspect container-a ("IPAddress": "172.17.0.2")
+
+docker inspect container-b ("IPAddress": "172.17.0.3")
+
+Login to container-a
+--------------------------
+root@ip-172-31-30-187:~# docker exec -it container-a /bin/bash
+
+Ping the container-b from container-a
+----------------------------------------root@a1527a2284fe:/# ping 172.17.0.3
+PING 172.17.0.3 (172.17.0.3) 56(84) bytes of data.
+64 bytes from 172.17.0.3: icmp_seq=1 ttl=64 time=0.051 ms
+64 bytes from 172.17.0.3: icmp_seq=2 ttl=64 time=0.043 ms
+64 bytes from 172.17.0.3: icmp_seq=3 ttl=64 time=0.038 ms
+64 bytes from 172.17.0.3: icmp_seq=4 ttl=64 time=0.040 ms
+^C
+--- 172.17.0.3 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3068ms
+rtt min/avg/max/mdev = 0.038/0.043/0.051/0.005 ms
+root@a1527a2284fe:/# 
+
+
+Launch a Container on the Default Network
+-----------------------------------------------
+1. Understanding the Docker Network Command
+
+The Docker Network command is the main command that would allow you to create, manage, and configure your Docker Network.
+
+sudo docker network
+
+root@ip-172-31-30-187:~# docker network
+
+Usage:  docker network COMMAND
+
+Manage networks
+
+Commands:
+  connect     Connect a container to a network
+  create      Create a network
+  disconnect  Disconnect a container from a network
+  inspect     Display detailed information on one or more networks
+  ls          List networks
+  prune       Remove all unused networks
+  rm          Remove one or more networks
+
+Run 'docker network COMMAND --help' for more information on a command.
+root@ip-172-31-30-187:~# 
+
+2. Using Docker Network Create command
+
+With the help of the "Create" command, we can create our own docker network and can deploy our containers in it. 
+
+sudo docker network create --driver <driver-name> <bridge-name>
+
+root@ip-172-31-30-187:~# docker network create --driver bridge secure-network
+e3b71eedea7a8f8ebf1079ab21ac440cdf23a0a908ab7fae3c9d591399637f8f
+root@ip-172-31-30-187:~# docker network ls
+NETWORK ID     NAME             DRIVER    SCOPE
+8b6c68696929   bridge           bridge    local
+dfe3ba0bfedf   host             host      local
+8cb8583ad705   none             null      local
+e3b71eedea7a   secure-network   bridge    local
+root@ip-172-31-30-187:~# 
+
+3. Using the Docker Network Connect command
+
+Using the "Connect" command, you can connect a running Docker Container to an existing Network.
+
+sudo docker network connect <network-name> <container-name or id>
+                    (or)
+sudo docker run -d --name container-c --network=<network-name> nginx:latest
+
+root@ip-172-31-30-187:~# docker run -d --name container-c --network=secure-network nginx:latest
+25eba3724fa05c0f9a98445a45d558863216c3b63580a14db4cb6db9201387d8
+
+Get the IP Address of container-c 
+-----------------------------------------------------
+docker inspect container-c ("IPAddress": "172.18.0.2")
+
+4. Using the Docker Network Inspect  command
+
+Using the Network Inspect command, you can find out the details of a Docker Network.
+               
+sudo docker network inspect <network-name>
+
+root@ip-172-31-30-187:~# docker network inspect secure-network
+[
+    {
+        "Name": "secure-network",
+        "Id": "e3b71eedea7a8f8ebf1079ab21ac440cdf23a0a908ab7fae3c9d591399637f8f",
+        "Created": "2025-07-13T07:34:55.981817043Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "25eba3724fa05c0f9a98445a45d558863216c3b63580a14db4cb6db9201387d8": {
+                "Name": "container-c",
+                "EndpointID": "f157ce1ffc7a940c0bd7d7531e3ed7ff4f4ed0069cc9b8c47634982cd6217e65",
+                "MacAddress": "02:42:ac:12:00:02",
+                "IPv4Address": "172.18.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {},
+        "Labels": {}
+    }
+]
+root@ip-172-31-30-187:~# 
+
+5. Using the Docker Network ls  command
+
+To list all the Docker Networks, you can use the list command.
+
+sudo docker network ls  
+
+root@ip-172-31-30-187:~# docker network ls
+NETWORK ID     NAME             DRIVER    SCOPE
+8b6c68696929   bridge           bridge    local
+dfe3ba0bfedf   host             host      local
+8cb8583ad705   none             null      local
+e3b71eedea7a   secure-network   bridge    local
+root@ip-172-31-30-187:~# 
+
+6. Using the Docker Network Disconnect command
+
+The disconnect command can be used to remove a Container from the Network.
+
+sudo docker network disconnect <network-name> <container-name>
+
+7. Using the Docker Network rm command
+
+You can remove a Docker Network using the rm command.
+
+sudo docker network rm <network-name>
+
+8. Using the Docker Network prune command
+
+To remove all the unused Docker Networks, you can use the prune command. 
+
+sudo docker network prune
+
+
+Interview Questions
+===========================================
+1) What is Docker?
+2) What is Container?
+3) How containers are different from the Virtual Machines?
+4) What is Docker life cycle?
+5) What are the different Docker components?
+6) What is the difference between docker COPY and docker ADD?
+7) What is the difference between CMD and Entrypoint in Docker?
+8) What are the networking types in Docker and what is the default?
+9) Can you explain how to isolate networking between the containers?
+10) What is Multistage Docker Build?
+11) What are the Distroless images in Docker?
+12) Real Time Challenges with Docker?
+
+-> Docker is a single daemon process. Which can cause a single point of failure, If the Docker daemon goes down for some reason all the applications are down.
+-> Docker daemon runs as a root user. Which is a security threat. Any process running as a root user, can have adverse effects. When it is comprised for the security reasons, it can impact
+   other applications or containers on the host.
+-> Resource Constraints: If you're running too many containers on a single host, you may experince the issues with Resource Constraints. This can result in slow performance or crashes.
+
+13) What steps would you take to secure containers?
+
+Some of the steps,
+1. Use Distroless images or the images with not too many packages as your final image in multi stage build, So that there is less chance of security issues or CVE. 
+2. Ensure that the networking is configured properly. This is one of the most common reasons for the security issues. If required, configure custom bridge networks and assign them to    isolate the containers.
+3. Use utilities like Sync to scan your container images before pushing them to PROD or STAGING. 
+
+
+https://www.geeksforgeeks.org/devops/docker-interview-questions/
