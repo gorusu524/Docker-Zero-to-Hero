@@ -67,9 +67,9 @@ Files and Folders that containers use from host operating system
     Control groups (cgroups): Docker containers use cgroups to limit and control the amount of resources, such as CPU, memory, and I/O, that a container can access.
     
 
+Installation (RHEL) => https://docs.docker.com/engine/install/rhel/#installation-methods
 
-
-Install the docker
+Install the docker in ubuntu
 -----------------------------
 -> sudo apt update -y
 
